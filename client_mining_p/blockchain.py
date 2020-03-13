@@ -49,7 +49,6 @@ class Blockchain(object):
     def hash(self, block):
         """
         Creates a SHA-256 hash of a Block
-
         :param block": <dict> Block
         "return": <str>
         """
@@ -60,6 +59,7 @@ class Blockchain(object):
         # It requires a `bytes-like` object, which is what
         # .encode() does.
         raw_hash = hashlib.sha256(string_block.encode())
+        print('RAWHASH', raw_hash)
         # It converts the Python string into a byte string.
         # We must make sure that the Dictionary is Ordered,
         # or we'll have inconsistent hashes
@@ -77,31 +77,14 @@ class Blockchain(object):
         # TODO: Return the hashed block string in hexadecimal format
         return hex_hash
 
-    # decorator funtion
+    # decorator function
     @property
     def last_block(self):
         return self.chain[-1]
 
 
-    # def proof_of_work(self, block):
-    #     """
-    #     Simple Proof of Work Algorithm
-    #     Stringify the block and look for a proof.
-    #     Loop through possibilities, checking each one against `valid_proof`
-    #     in an effort to find a number that is a valid proof
-    #     :return: A valid proof for the provided block
-    #     """
-    #     # TODO: guess and check method
-    #     block_string = json.dumps(block, sort_keys=True)
-
-    #     proof = 0
-    #     while self.valid_proof(block_string, proof) is False:
-    #         proof += 1
-
-    #     return proof
-
     @staticmethod
-    def valid_proof(block_string, proof):
+    def valid_proof(last_block, proof):
         """
         Validates the Proof:  Does hash(block_string, proof) contain 3
         leading zeroes?  Return true if the proof is valid
@@ -112,8 +95,9 @@ class Blockchain(object):
         correct number of leading zeroes.
         :return: True if the resulting hash is a valid proof, False otherwise
         """
-        # TODO
-        guess = f'{block_string} {proof}'.encode()
+        block_string = json.dumps(last_block, sort_keys=True)
+
+        guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
 
         return guess_hash[:6] == '000000'
@@ -129,21 +113,31 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 
 
-@app.route('/mine', methods=['GET'])
+# Modify the mine endpoint to instead receive and validate or reject a new proof sent by a client.
+# It should accept a POST
+# Use data = request.get_json() to pull the data out of the POST
+# Note that request and requests both exist in this project
+# Check that 'proof', and 'id' are present
+# return a 400 error using jsonify(response) with a 'message'
+
+@app.route('/mine', methods=['POST'])
 def mine():
-    # Run the proof of work algorithm to get the next proof
-    proof = blockchain.proof_of_work(blockchain.last_block)
-    
-    # Forge the new Block by adding it to the chain with the proof
-    previous_hash = blockchain.hash(blockchain.last_block)
-    block = blockchain.new_block(proof, previous_hash)
+
+    data = request.get_json()
+
+    if blockchain.valid_proof(blockchain.last_block, data.proof):
+        blockchain.new_block(data.proof)
+        message = 'New Block Forged'
+        response_code = 200
+    else:
+        message = 'sorry, not valid!'
+        response_code = 400
 
     response = {
-        # TODO: Send a JSON response with the new block
-        'new_block': block
+        'message': message
     }
 
-    return jsonify(response), 200
+    return jsonify(response), response_code
 
 
 @app.route('/chain', methods=['GET'])
@@ -155,10 +149,11 @@ def full_chain():
     }
     return jsonify(response), 200
 
+
 @app.route('/last_block', methods=['GET'])
 def last_block():
     response = {
-        'last_block': self.last_block
+        'last_block': blockchain.last_block
     }
     return jsonify(response), 200
 

@@ -54,20 +54,17 @@ class Blockchain(object):
         "return": <str>
         """
 
-        # Use json.dumps to convert json into a string
+        # Use json.dumps to convert the block json into a string
         string_block = json.dumps(block, sort_keys=True)
-        print('string_block', string_block)
         # Use hashlib.sha256 to create a hash
         # It requires a `bytes-like` object, which is what
         # .encode() does.
         raw_hash = hashlib.sha256(string_block.encode())
-        print('raw_hash', raw_hash)
         # It converts the Python string into a byte string.
         # We must make sure that the Dictionary is Ordered,
         # or we'll have inconsistent hashes
 
         # TODO: Create the block_string
-
         # TODO: Hash this string using sha256
 
         # By itself, the sha256 function returns the hash in a raw string
@@ -76,7 +73,7 @@ class Blockchain(object):
         # hash to a string of hexadecimal characters, which is
         # easier to work with and understand
         hex_hash = raw_hash.hexdigest()
-        print('hex_hash', hex_hash)
+
         # TODO: Return the hashed block string in hexadecimal format
         return hex_hash
 
