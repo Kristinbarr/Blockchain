@@ -59,7 +59,6 @@ class Blockchain(object):
         # It requires a `bytes-like` object, which is what
         # .encode() does.
         raw_hash = hashlib.sha256(string_block.encode())
-        print('RAWHASH', raw_hash)
         # It converts the Python string into a byte string.
         # We must make sure that the Dictionary is Ordered,
         # or we'll have inconsistent hashes
@@ -125,8 +124,8 @@ def mine():
 
     data = request.get_json()
 
-    if blockchain.valid_proof(blockchain.last_block, data.proof):
-        blockchain.new_block(data.proof)
+    if blockchain.valid_proof(blockchain.last_block, data['proof']):
+        blockchain.new_block(data['proof'])
         message = 'New Block Forged'
         response_code = 200
     else:
